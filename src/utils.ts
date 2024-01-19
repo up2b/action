@@ -382,6 +382,9 @@ const addSuffix = async (
 ): Promise<Artifact> => {
   const { path } = artifact;
   const { dir, name, ext } = parse(path);
+
+  if (path.endsWith('.app.tar.gz')) return artifact;
+
   const newName = name + '-' + suffix + ext;
   const newPath = join(dir, newName);
 
