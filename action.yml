@@ -20,6 +20,9 @@ inputs:
     default: false
   releaseCommitish:
     description: 'Any branch or commit SHA the Git tag is created from, unused if the Git tag already exists. Default: SHA of current commit'
+  featuresSuffix:
+    description: 'whether to add features as suffix or not'
+    default: false
   projectPath:
     description: 'path to the root of the project that will be built'
     default: '.'
@@ -47,6 +50,8 @@ inputs:
     default: false
   tauriScript:
     description: 'the script to run to build the Tauri app'
+  rename:
+    description: 'rename all the bundles, the value type is JSON string: ''{"searchValue": "...", "replaceValue", "..."'''
   args:
     description: 'arguments for the tauri command'
   bundleIdentifier:

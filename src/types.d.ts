@@ -13,8 +13,15 @@ export interface Artifact {
   arch: string;
 }
 
+export interface Rename {
+  searchValue: string;
+  replaceValue: string;
+}
+
 export interface BuildOptions {
   tauriScript: string | null;
+  rename: Rename | null;
+  addFeaturesSuffix: boolean;
   args: string[] | null;
 }
 

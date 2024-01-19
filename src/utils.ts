@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'fs';
-import path, { join, normalize, resolve, sep } from 'path';
+import { existsSync, readFileSync, renameSync } from 'fs';
+import path, { join, normalize, parse, resolve, sep } from 'path';
 
 import { execa } from 'execa';
 import { parse as parseToml } from '@iarna/toml';
@@ -8,9 +8,11 @@ import { globbySync } from 'globby';
 import { getConfig, mergePlatformConfig, mergeUserConfig } from './config';
 
 import type {
+  Artifact,
   CargoConfig,
   CargoManifest,
   Info,
+  Rename,
   TargetInfo,
   TargetPlatform,
 } from './types';
@@ -346,3 +348,53 @@ export function getTargetInfo(targetPath?: string): TargetInfo {
 
   return { arch, platform };
 }
+
+const renameFile = async (
+  artifact: Artifact,
+  searchValue: string,
+  replaceValue: string,
+): Promise<Artifact> => {
+  const { path } = artifact;
+  const { dir, base } = parse(path);
+  const newName = base.replace(searchValue, replaceValue);
+  const newPath = join(dir, newName);
+
+  renameSync(path, newPath);
+
+  return { ...artifact, path: newPath };
+};
+
+export const renameFiles = async (
+  artifacts: Artifact[],
+  rename: Rename,
+): Promise<Artifact[]> => {
+  const { searchValue, replaceValue } = rename;
+  return await Promise.all(
+    artifacts.map((artifact) =>
+      renameFile(artifact, searchValue, replaceValue),
+    ),
+  );
+};
+
+const addSuffix = async (
+  artifact: Artifact,
+  suffix: string,
+): Promise<Artifact> => {
+  const { path } = artifact;
+  const { dir, name, ext } = parse(path);
+  const newName = name + '-' + suffix + ext;
+  const newPath = join(dir, newName);
+
+  renameSync(path, newPath);
+
+  return { ...artifact, path: newPath };
+};
+
+export const addFeaturesSuffix = async (
+  artifacts: Artifact[],
+  features: string,
+) => {
+  return await Promise.all(
+    artifacts.map((artifact) => addSuffix(artifact, features)),
+  );
+};

@@ -4,11 +4,13 @@ import { join } from 'path';
 import { initProject } from './init-project';
 import { getRunner } from './runner';
 import {
+  addFeaturesSuffix,
   getInfo,
   getTargetDir,
   getTargetInfo,
   getTauriDir,
   getWorkspaceDir,
+  renameFiles,
 } from './utils';
 
 import type { Artifact, BuildOptions, InitOptions } from './types';
@@ -233,5 +235,46 @@ export async function buildProject(
   console.log(
     `Looking for artifacts in:\n${artifacts.map((a) => a.path).join('\n')}`,
   );
-  return artifacts.filter((p) => existsSync(p.path));
+  let filteredArtifacts = artifacts.filter((p) => existsSync(p.path));
+
+  if (buildOpts.addFeaturesSuffix) {
+    const featuresArgIdx = [...tauriArgs].findIndex(
+      (e) => e === '-f' || e === '--features',
+    );
+    const featuresString =
+      featuresArgIdx >= 0 ? [...tauriArgs][featuresArgIdx + 1] : undefined;
+    const features = featuresString
+      ? featuresString
+          .split(',')
+          .map((f) => f.trim())
+          .filter((s) => s !== '')
+      : undefined;
+    const featuresSuffix = features && features.join('-');
+
+    if (featuresSuffix) {
+      const artifactsWithFeatures = await addFeaturesSuffix(
+        filteredArtifacts,
+        featuresSuffix,
+      );
+      console.log(
+        `\nArtifacts with features added:\n${artifactsWithFeatures.map((a) => a.path).join('\n')}`,
+      );
+      filteredArtifacts = artifactsWithFeatures;
+    }
+  }
+
+  if (!buildOpts.rename) {
+    return filteredArtifacts;
+  }
+
+  const renamedArtifacts = await renameFiles(
+    filteredArtifacts,
+    buildOpts.rename,
+  );
+
+  console.log(
+    `\nRenamed artifacts to:\n${renamedArtifacts.map((a) => a.path).join('\n')}`,
+  );
+
+  return renamedArtifacts;
 }

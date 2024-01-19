@@ -11,7 +11,7 @@ import { uploadVersionJSON } from './upload-version-json';
 import { buildProject } from './build';
 import { execCommand, getInfo, getTargetInfo } from './utils';
 
-import type { Artifact, BuildOptions, InitOptions } from './types';
+import type { Artifact, BuildOptions, InitOptions, Rename } from './types';
 
 async function run(): Promise<void> {
   try {
@@ -25,6 +25,7 @@ async function run(): Promise<void> {
     const appVersion = core.getInput('appVersion');
     const includeRelease = core.getBooleanInput('includeRelease');
     const includeDebug = core.getBooleanInput('includeDebug');
+    const addFeaturesSuffix = core.getBooleanInput('featuresSuffix');
     const includeUpdaterJson = core.getBooleanInput('includeUpdaterJson');
     const updaterJsonKeepUniversal = core.getBooleanInput(
       'updaterJsonKeepUniversal',
@@ -32,6 +33,10 @@ async function run(): Promise<void> {
     const tauriScript = core.getInput('tauriScript');
     const args = stringArgv(core.getInput('args'));
     const bundleIdentifier = core.getInput('bundleIdentifier');
+    const renameString = core.getInput('rename');
+    const rename: Rename | null = renameString
+      ? JSON.parse(renameString)
+      : null;
 
     let tagName = core.getInput('tagName').replace('refs/tags/', '');
     let releaseId = Number(core.getInput('releaseId'));
@@ -60,7 +65,9 @@ async function run(): Promise<void> {
 
     const buildOptions: BuildOptions = {
       tauriScript,
+      rename,
       args,
+      addFeaturesSuffix,
     };
     const initOptions: InitOptions = {
       distPath,
